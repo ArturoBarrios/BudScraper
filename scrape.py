@@ -4,33 +4,52 @@ import requests
 import json
 
 BASE_URL = "https://monroe-menu.thelandingdispensaries.com"
-LISTING_URL = f"{BASE_URL}/stores/monroe-ohio/products/flower?brands=galenas&brands=firelands-scientific"
+LISTING_URL = "https://monroe-menu.thelandingdispensaries.com/stores/monroe-ohio/products/flower"
 
-def get_product_links(page, limit=None):
+def get_product_links(page, limit=None):    
     page.goto(LISTING_URL, timeout=60000)
-    page.wait_for_timeout(3000)
+    page.wait_for_selector("div[data-testid='product-list-item'] a", timeout=10000)
 
-    links = set()
+    # Get total number of pages from pagination nav
+    page.wait_for_selector("nav[aria-label='pagination navigation']", timeout=10000)
+    pagination_buttons = page.locator("nav[aria-label='pagination navigation'] button[aria-label^='go to page']")
+    total_pages = pagination_buttons.count()
 
-    while True:
-        # Scrape product links on current page
+    print(f"📘 Total pages detected: {total_pages}")
+
+    links = []
+    page_number = 1
+
+    while page_number <= total_pages:
         product_anchors = page.locator("div[data-testid='product-list-item'] a").all()
         for a in product_anchors:
             href = a.get_attribute("href")
             if href and href.startswith("/stores/monroe-ohio/product/"):
-                links.add(BASE_URL + href)
-                if limit and len(links) >= limit:
-                    return list(links)
+                links.append(BASE_URL + href)
 
-        # Try clicking the next pagination button
-        next_button = page.locator("button[aria-label='go to next page']")
-        if next_button.count() == 0 or next_button.is_disabled():
+        print(f"📄 Page {page_number}: Collected {len(links)} links so far")
+
+        if page_number == total_pages:
             break
 
-        next_button.click()
-        page.wait_for_timeout(3000)
+        next_button = page.locator("button[aria-label='go to next page']")
+        try:
+            next_button.click(force=True)
+            page.wait_for_selector("div[data-testid='product-list-item'] a", timeout=10000)
+            page_number += 1
+        except Exception as e:
+            print(f"⚠️ Failed to go to next page: {e}")
+            break
 
-    return list(links)
+    print(f"🧮 Total products found across all pages: {len(links)}")
+
+    if limit and limit > 0:
+        return links[:limit]
+    return links
+
+
+
+
 
 def scrape_product_details(page, url):
     page.goto(url, timeout=60000)
