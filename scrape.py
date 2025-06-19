@@ -160,33 +160,28 @@ def main():
         links = get_product_links(page, limit=max_items)
         print(f"🧾 Found {len(links)} product(s).")
 
-        all_data = []
         for link in links:
             print(f"➡️ Scraping {link}")
             try:
                 data = scrape_product_details(page, link)
-                all_data.append(data)
+
+                payload = {
+                    "storeName": "Monroe Ohio",
+                    "strains": [data]  # send one strain at a time
+                }
+
+                print("\n📤 Sending strain to backend:\n" + json.dumps(payload, indent=2))
+
+                response = requests.post("http://localhost:4000/strains/create-strains", json=payload)
+                print(f"📬 Server response: {response.status_code} {response.reason}")
+                print(response.text)
             except Exception as e:
                 print(f"⚠️ Error scraping {link}: {e}")
             time.sleep(2)
 
         browser.close()
+        print("\n✅ Done sending all strains to backend.")
 
-        print("\n✅ Scraping complete. Sending data to backend...")
-
-        payload = {
-            "storeName": "Monroe Ohio",
-            "strains": all_data
-        }
-
-        print("\n🔍 Payload being sent to backend:\n" + json.dumps(payload, indent=2))
-
-        try:
-            response = requests.post("http://localhost:4000/strains/create-strains", json=payload)
-            print(f"📬 Server response: {response.status_code} {response.reason}")
-            print(response.text)
-        except Exception as e:
-            print(f"❌ Failed to send data to backend: {e}")
 
 if __name__ == "__main__":
     main()
