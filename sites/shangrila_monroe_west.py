@@ -3,6 +3,10 @@
 import time
 import requests
 import json
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 BASE_URL = "https://shangriladispensaries.com"
 LISTING_URL = f"{BASE_URL}/stores/shangri-la-monroe-butler-county/products/flower"
@@ -24,7 +28,10 @@ def run(page, limit=None):
 
             print("\n📤 Sending strain to backend:\n" + json.dumps(payload, indent=2))
 
-            response = requests.post("http://localhost:4000/strains/create-strains", json=payload)
+            response = requests.post(
+    os.getenv("API_BASE_URL") + "/strains/create-strains",
+    json=payload
+)
             print(f"📬 Server response: {response.status_code} {response.reason}")
             print(response.text)
         except Exception as e:
