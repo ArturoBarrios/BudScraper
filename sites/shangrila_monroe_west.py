@@ -29,7 +29,7 @@ def run(page, limit=None):
             print("\n📤 Sending strain to backend:\n" + json.dumps(payload, indent=2))
 
             response = requests.post(
-    os.getenv("API_BASE_URL") + "/strains/create-strains",
+    os.getenv("BUDRECOMMENDER_BE_URL") + "/strains/create-strains",
     json=payload
 )
             print(f"📬 Server response: {response.status_code} {response.reason}")
