@@ -18,7 +18,7 @@ def run(page, limit=None):
     for link in links:
         print(f"➡️ Scraping {link}")
         try:
-            data = scrape_product_details(page, link)
+            data = scrape_product_details(page, "https://monroe-menu.thelandingdispensaries.com/stores/monroe-ohio/product/cap-junk-2-83g")
 
             payload = {
                 "storeName": "Monroe Ohio",
@@ -152,6 +152,15 @@ def scrape_product_details(page, url):
     except:
         pass
 
+    # Image URL (get from inside the picture/img tag)
+    image_url = None
+    try:
+        img_locator = page.locator("div[data-testid='main-product-image-scroll-container'] img").first
+        if img_locator:
+            image_url = img_locator.get_attribute("src")
+    except Exception as e:
+        print("Failed to get image URL:", e)
+
     return {
         "url": url,
         "name": name,
@@ -161,5 +170,6 @@ def scrape_product_details(page, url):
         "weight": weight,
         "price": price,
         "brand": brand_name,
-        "offer": offer
+        "offer": offer,
+        "image_url": image_url,
     }
